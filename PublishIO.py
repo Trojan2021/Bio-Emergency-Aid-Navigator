@@ -2,7 +2,7 @@ import time
 from Adafruit_IO import Client, Feed
 
 ADAFRUIT_IO_USERNAME = 'g_nerone'
-ADAFRUIT_IO_KEY = 'aio_bcim25nKA0sL4DpB82cbevOCaXGH'
+ADAFRUIT_IO_KEY = 'xxxxxxxx'
 
 FEED_NAME = 'test'
 
