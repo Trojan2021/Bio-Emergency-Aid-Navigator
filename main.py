@@ -1,27 +1,35 @@
-# import cv2
-# import supervision as sv
-# from ultralytics import YOLO
-# from PIL import Image
-
-# video = cv2.VideoCapture(0, cv2.CAP_DSHOW)
-# r, image = video.read()
-# video.release()
-# model = YOLO("yolov8s.pt")
-# results = model(image)[0]
-# detections = sv.Detections.from_ultralytics(results)
-
-# print(results)
-# for result in results:
-#     im_array = result.plot()  # Get a BGR numpy array of predictions
-#     im = Image.fromarray(im_array[..., ::-1])  # Convert to RGB PIL image
-#     im.show()  # Show the image
-#     im.save("results.jpg")  # Save the image
-
 import tkinter as tk
-from PIL import Image, ImageTk
-import supervision as sv
+
 import cv2
+import supervision as sv
+from Adafruit_IO import Client
+from PIL import Image, ImageTk
 from ultralytics import YOLO
+
+ADAFRUIT_IO_USERNAME = "xxxxxxxxx"
+ADAFRUIT_IO_KEY = "xxxxxxxxx"
+
+FEED_NAME = "test"
+
+aio = Client(ADAFRUIT_IO_USERNAME, ADAFRUIT_IO_KEY)
+
+
+def requestDrop():
+    value = input("Enter 0 for close or 1 for open (q to quit): ")
+
+    if value.lower() == "q":
+        return
+
+    try:
+        value = int(value)
+    except ValueError:
+        print("Invalid input")
+    if value not in [0, 1]:
+        print("Invalid input. Please enter 0 or 1.")
+    else:
+        aio.send_data(FEED_NAME, value)
+        print(f"Published value {value} to Adafruit IO feed")
+
 
 # Initialize the video capture
 video = cv2.VideoCapture(0, cv2.CAP_DSHOW)
@@ -47,6 +55,7 @@ def update_frame():
     detections = sv.Detections.from_ultralytics(results)
     if "person" in detections.data["class_name"]:
         print("Beans")
+        requestDrop()
 
     # Convert the frame to RGB
     im_array = results.plot()
