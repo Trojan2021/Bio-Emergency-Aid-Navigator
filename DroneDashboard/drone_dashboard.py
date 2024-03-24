@@ -73,12 +73,10 @@ with st.sidebar:
 col1 = st.columns((4,6,2), gap='small')
 blockCSS = """<div style="background-color: #333333; color: white; border-radius: 5px; padding: 10px;">"""
 with col1[0]:
-    x_number = 10
-    y_number = 11
     z_number = 12
     st.markdown('#### Coordinate Location')
     st.markdown("""<div style="background-color: #1AA91A; color: white; border-radius: 5px; padding: 10px;">"""
-                f"""<strong>X:</strong> {x_number}<br><strong>Y:</strong> {y_number}<br><strong>Z:</strong> {z_number}"""
+                f"""<strong>Latitude:</strong> 40°00'45.4"N<br><strong>Longitude:</strong> 83°00'56.5"W<br><strong>Height:</strong> {z_number} meters"""
                 """</div>""", unsafe_allow_html=True)
 with col1[2]:
     itemsList = ['Bandaids', 'Gauzes', 'Alchol Wipes', 'Ointment', 'Gloves']
