@@ -1,0 +1,5 @@
+Bandaids: 1;
+Gauzes: 0;
+Alchol Wipes: 0;
+Ointment: 0;
+Gloves: 0;
