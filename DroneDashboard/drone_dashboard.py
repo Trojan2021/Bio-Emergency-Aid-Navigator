@@ -53,7 +53,7 @@ def currentItemSelected():
 # Page configuration
 st.set_page_config(
     page_title="Bio-Emergency-Aid-Navigator",
-    #page_icon="🏂",
+    page_icon="🚁",
     layout="wide",
     initial_sidebar_state="expanded")
 
@@ -79,7 +79,7 @@ with col1[0]:
                 f"""<strong>Latitude:</strong> 40°00'45.4"N<br><strong>Longitude:</strong> 83°00'56.5"W<br><strong>Height:</strong> {z_number} meters"""
                 """</div>""", unsafe_allow_html=True)
 with col1[2]:
-    itemsList = ['Bandaids', 'Gauzes', 'Alchol Wipes', 'Ointment', 'Gloves']
+    itemsList = ['Bandaids', 'Gauzes', 'Alcohol Wipes', 'Ointment', 'Gloves']
     with open('currentItemSelected.txt', 'w') as file:
         file.write(st.selectbox('Select Item', itemsList))
     if(st.button("Reset Items")):
@@ -96,7 +96,7 @@ with col1[1]:
     sub_col1, sub_col2 = st.columns(2)
     with sub_col1:
         st.markdown("""<div style="background-color: #0F1CA9; color: white; border-radius: 5px; padding: 10px;">"""
-                    f"""<strong>Bandaids:</strong> {getItemAmount("Bandaids")}<br><strong>Gauzes:</strong> {getItemAmount("Gauzes")}<br><strong>Alchol Wipes:</strong> {getItemAmount("Alchol Wipes")}"""
+                    f"""<strong>Bandaids:</strong> {getItemAmount("Bandaids")}<br><strong>Gauzes:</strong> {getItemAmount("Gauzes")}<br><strong>Alcohol Wipes:</strong> {getItemAmount("Alcohol Wipes")}"""
                     """</div>""", unsafe_allow_html=True)
     with sub_col2:
         st.markdown("""<div style="background-color: #0F1CA9; color: white; border-radius: 5px; padding: 10px;">"""
@@ -104,10 +104,10 @@ with col1[1]:
                     """</div>""", unsafe_allow_html=True)
         
     
-col2 = st.columns((0.5,10,0.5), gap="medium")
+col2 = st.columns((1,5,1), gap="medium")
 with col2[1]:
     st.markdown('#### Live Drone Feed')
-    video_url = "https://www.youtube.com/watch?v=fV3AijsRkJQ&ab_channel=GoingDownGaming"  # Replace with your YouTube video URL
+    video_url = "https://www.youtube.com/watch?v=6BIURPirIQ8&ab_channel=GoingDownGaming"  # Replace with your YouTube video URL
     st.video(video_url)
 
         
