@@ -8,6 +8,8 @@ __pycache__/
 
 # Test Files
 test.py
+/runs
+*.mp4
 
 # Distribution / packaging
 .Python
