@@ -2,6 +2,8 @@
 # Import libraries
 import streamlit as st
 import altair as alt
+import folium
+from streamlit_folium import folium_static
 
 def getItemAmount(itemName):
     amount = -1
@@ -99,7 +101,7 @@ with col1[1]:
     sub_col1, sub_col2 = st.columns(2)
     with sub_col1:
         st.markdown("""<div style="background-color: #0F1CA9; color: white; border-radius: 5px; padding: 10px;">"""
-                    f"""<strong>Bandaids:</strong> {getItemAmount("Bandaids")}<br><strong>Gauzes:</strong> {getItemAmount("Gauzes")}<br><strong>Alcohol Wipes:</strong> {getItemAmount("Alcohol Wipes")}"""
+                    f"""<strong> {getItemAmount("Bandaids")}<br><strong>Gauzes:</strong> {getItemAmount("Gauzes")}<br><strong>Alcohol Wipes:</strong> {getItemAmount("Alcohol Wipes")}"""
                     """</div>""", unsafe_allow_html=True)
     with sub_col2:
         st.markdown("""<div style="background-color: #0F1CA9; color: white; border-radius: 5px; padding: 10px;">"""
@@ -107,7 +109,12 @@ with col1[1]:
                     """</div>""", unsafe_allow_html=True)
         
     
-col2 = st.columns((1,5,1), gap="medium")
+col2 = st.columns((5,5), gap="medium")
+with col2[0]:
+    m = folium.Map(location=[40.00804054283757, -83.02865352709865], zoom_start=100)
+    folium.Marker(location=[40.00804054283757, -83.02865352709865], popup="San Francisco").add_to(m)
+    st.markdown('#### Location Of Drone')
+    folium_static(m, width=500, height=400)
 with col2[1]:
     st.markdown('#### Live Drone Feed')
     video_url = "https://www.youtube.com/watch?v=6BIURPirIQ8&ab_channel=GoingDownGaming"  # Replace with your YouTube video URL
