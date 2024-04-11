@@ -4,6 +4,16 @@ import streamlit as st
 import altair as alt
 import folium
 from streamlit_folium import folium_static
+from Adafruit_IO import Client
+
+ADAFRUIT_IO_USERNAME = 'gnerone'
+ADAFRUIT_IO_KEY = ''
+FEED_NAME = 'gps'
+aio = Client(ADAFRUIT_IO_USERNAME, ADAFRUIT_IO_KEY)
+
+def getGPSValue():
+    data = aio.receive(FEED_NAME)
+    return (data.value) if data else None
 
 def getItemAmount(itemName):
     amount = -1
@@ -69,7 +79,7 @@ alt.themes.enable("dark")
 with st.sidebar:
     st.title('Bio-Emergency-Aid-Navigator')
 
-    drone_list = ['Drone 1']#, 'cividis', 'greens', 'inferno', 'magma', 'plasma', 'reds', 'rainbow', 'turbo', 'viridis']
+    drone_list = ['Drone 1']
     current_drone = st.selectbox('Select active drone', drone_list)
 
 #######################
@@ -111,13 +121,12 @@ with col1[1]:
     
 col2 = st.columns((5,5), gap="medium")
 with col2[0]:
-    m = folium.Map(location=[40.00804054283757, -83.02865352709865], zoom_start=100)
-    folium.Marker(location=[40.00804054283757, -83.02865352709865], popup="San Francisco").add_to(m)
+    cords = getGPSValue().split(',')
+    m = folium.Map(location=[cords[0], cords[1]], zoom_start=100)
+    folium.Marker(location=[cords[0], cords[1]], popup="San Francisco").add_to(m)
     st.markdown('#### Location Of Drone')
     folium_static(m, width=500, height=400)
 with col2[1]:
     st.markdown('#### Live Drone Feed')
     video_url = "https://www.youtube.com/watch?v=6BIURPirIQ8&ab_channel=GoingDownGaming"  # Replace with your YouTube video URL
     st.video(video_url)
-
-        
