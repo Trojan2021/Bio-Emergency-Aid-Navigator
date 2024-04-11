@@ -48,6 +48,9 @@ def currentItemSelected():
     with open('currentItemSelected.txt', 'r') as file:
         file_contents = file.read()
     return file_contents
+
+def getGPSInfo():
+    return
         
 #######################
 # Page configuration
