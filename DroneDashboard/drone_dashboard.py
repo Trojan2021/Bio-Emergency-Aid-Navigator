@@ -6,7 +6,7 @@ import folium
 from streamlit_folium import folium_static
 from Adafruit_IO import Client
 
-ADAFRUIT_IO_USERNAME = 'gnerone'
+ADAFRUIT_IO_USERNAME = 'g_nerone'
 ADAFRUIT_IO_KEY = ''
 FEED_NAME = 'gps'
 aio = Client(ADAFRUIT_IO_USERNAME, ADAFRUIT_IO_KEY)
@@ -14,6 +14,7 @@ aio = Client(ADAFRUIT_IO_USERNAME, ADAFRUIT_IO_KEY)
 def getGPSValue():
     data = aio.receive(FEED_NAME)
     return (data.value) if data else None
+    return '0,0'
 
 def getItemAmount(itemName):
     amount = -1
@@ -21,6 +22,7 @@ def getItemAmount(itemName):
         file_contents = file.read()
         index = file_contents.find(':', file_contents.find(itemName)) + 2
         amount = int(file_contents[index:file_contents.find(';',index)])
+    #return """Gauzes:</strong>"" 
     return amount
 
 def resetAllItems():
@@ -61,8 +63,28 @@ def currentItemSelected():
         file_contents = file.read()
     return file_contents
 
-def getGPSInfo():
-    return
+def DDCordsToDMSCords(latLong):
+    latLong = [float(latLong[0]), float(latLong[1])]
+    dmsLatLong = ['','']
+    for i in range(2):
+        if(i == 0):
+            if(latLong[i] > 0):
+                cardinal = 'N'
+            else:
+                cardinal = 'S'
+                latLong[i] = -1 * latLong[i]
+        elif(i == 1):
+            if(latLong[i] > 0):
+                cardinal = 'E'
+            else:
+                cardinal = 'W'
+                latLong[i] = -1 * latLong[i]
+        d = int(latLong[i])
+        temp = (latLong[i] - d) * 60
+        m = int(temp)
+        s = round((temp - m) * 60, 6)
+        dmsLatLong[i] = str(d) + '°' + str(m) + "'" + str(s) + '"' + cardinal
+    return dmsLatLong
         
 #######################
 # Page configuration
@@ -89,16 +111,20 @@ col1 = st.columns((4,6,2), gap='small')
 blockCSS = """<div style="background-color: #333333; color: white; border-radius: 5px; padding: 10px;">"""
 with col1[0]:
     z_number = 12
+    cords = getGPSValue()
+    if(cords is not None):
+        cords = cords.split(',')
+    else:
+        cords = [0, 0]
+    dmsCords = DDCordsToDMSCords(cords)
     st.markdown('#### Coordinate Location')
     st.markdown("""<div style="background-color: #1AA91A; color: white; border-radius: 5px; padding: 10px;">"""
-                f"""<strong>Latitude:</strong> 40°00'45.4"N<br><strong>Longitude:</strong> 83°00'56.5"W<br><strong>Height:</strong> {z_number} meters"""
+                f"""<strong>Latitude:</strong> {dmsCords[0]}<br><strong>Longitude:</strong> {dmsCords[1]}<br><strong>Height:</strong> {z_number} Meters above Sea Level"""
                 """</div>""", unsafe_allow_html=True)
 with col1[2]:
     itemsList = ['Bandaids', 'Gauzes', 'Alcohol Wipes', 'Ointment', 'Gloves']
     with open('currentItemSelected.txt', 'w') as file:
         file.write(st.selectbox('Select Item', itemsList))
-    if(st.button("Reset Items")):
-        resetAllItems()
     sub_col1, sub_col2 = st.columns(2)
     with sub_col1:
         if st.button("+1 Item"):
@@ -106,12 +132,16 @@ with col1[2]:
     with sub_col2:
         if st.button("-1 Item"):
             decrementItemAmount(currentItemSelected())
+    sub_col = st.columns((1,5,1), gap="small")
+    with sub_col[1]:
+        if(st.button("Reset Items")):
+            resetAllItems()
 with col1[1]:  
     st.markdown('#### Amount of Items')
     sub_col1, sub_col2 = st.columns(2)
     with sub_col1:
         st.markdown("""<div style="background-color: #0F1CA9; color: white; border-radius: 5px; padding: 10px;">"""
-                    f"""<strong> {getItemAmount("Bandaids")}<br><strong>Gauzes:</strong> {getItemAmount("Gauzes")}<br><strong>Alcohol Wipes:</strong> {getItemAmount("Alcohol Wipes")}"""
+                    f"""<strong>Bandaids:</strong> {getItemAmount("Bandaids")}<br><strong>Gauzes:</strong> {getItemAmount("Gauzes")}<br><strong>Alcohol Wipes:</strong> {getItemAmount("Alcohol Wipes")}"""
                     """</div>""", unsafe_allow_html=True)
     with sub_col2:
         st.markdown("""<div style="background-color: #0F1CA9; color: white; border-radius: 5px; padding: 10px;">"""
@@ -121,9 +151,14 @@ with col1[1]:
     
 col2 = st.columns((5,5), gap="medium")
 with col2[0]:
-    cords = getGPSValue().split(',')
-    m = folium.Map(location=[cords[0], cords[1]], zoom_start=100)
-    folium.Marker(location=[cords[0], cords[1]], popup="San Francisco").add_to(m)
+    cords = getGPSValue()
+    if(cords is not None):
+        cords = cords.split(',')
+    else:
+        cords = [0, 0]
+        
+    m = folium.Map(location=[float(cords[0]), float(cords[1])], zoom_start=100)
+    folium.Marker(location=[float(cords[0]), float(cords[1])], popup="Drone 1 Location").add_to(m)
     st.markdown('#### Location Of Drone')
     folium_static(m, width=500, height=400)
 with col2[1]:
