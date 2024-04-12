@@ -1,4 +1,4 @@
-Bandaids: 7;
+Bandaids: 0;
 Gauzes: 0;
 Alcohol Wipes: 0;
 Ointment: 0;

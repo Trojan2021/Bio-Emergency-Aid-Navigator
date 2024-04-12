@@ -2,14 +2,48 @@
 # Import libraries
 import streamlit as st
 import altair as alt
+import threading
+import time
 import folium
 from streamlit_folium import folium_static
 from Adafruit_IO import Client
 
+class item_amounts:
+    intialValues = {
+    "Bandaids": 0,
+    "Gauzes": 0,
+    "Alcohol Wipes": 0,
+    "Ointment": 0,
+    "Gloves": 0
+    }
+    currentItem = 'Bandaids'
+    
+    def __init__(self) -> None:
+        pass
+    
+    def updateValue(self, itemName, amount):
+        item_amounts.intialValues[itemName] = amount
+        
+    def updateCurrentItem(self, itemName):
+        item_amounts.currentItem = itemName
+
 ADAFRUIT_IO_USERNAME = 'g_nerone'
-ADAFRUIT_IO_KEY = ''
+ADAFRUIT_IO_KEY = 'API_KEY_HERE'
 FEED_NAME = 'gps'
 aio = Client(ADAFRUIT_IO_USERNAME, ADAFRUIT_IO_KEY)
+# intialValues = {
+#     "Bandaids": 0,
+#     "Gauzes": 0,
+#     "Alcohol Wipes": 0,
+#     "Ointment": 0,
+#     "Gloves": 0
+# }
+# currentItem = 'Bandaids'
+def initialize_session_state():
+    if 'initialValues' not in st.session_state:
+        st.session_state.initialValues = {"Bandaids": 0,"Gauzes": 0,"Alcohol Wipes": 0,"Ointment": 0,"Gloves": 0}
+    if 'currentItem' not in st.session_state:
+        st.session_state.currentItem = "Bandaids"
 
 def nemaToDD(cord, direction):
     ddmm = int(cord)
@@ -22,11 +56,13 @@ def nemaToDD(cord, direction):
 
 def getGPSValue():
     data = aio.receive(FEED_NAME)
+    gpsOneLine = data.value
+    #gpsOneLine = '$GPGGA,015025.00,4000.27294,N,08300.46216,W,1,05,2.24,249.9,M,-33.7,M,,*62'
     #cords = data.value.split(',')
     #cords.append('100.4')
     #return cords if data else [0, 0]
     if(data is not None):
-        cords = data.value[data.value.find("$GPGGA"):]
+        cords = gpsOneLine[gpsOneLine.find("$GPGGA"):]
         nemaData = cords.split(',')
         lat = nemaToDD(float(nemaData[2]), nemaData[3])
         long = nemaToDD(float(nemaData[4]), nemaData[5])
@@ -39,24 +75,30 @@ def getGPSValue():
     return (lat,long,height)
 
 def getItemAmount(itemName):
-    amount = -1
-    with open('initialValues.txt', 'r') as file:
-        file_contents = file.read()
-        index = file_contents.find(':', file_contents.find(itemName)) + 2
-        amount = int(file_contents[index:file_contents.find(';',index)]) 
-    return amount
+    # amount = -1
+    # with open('initialValues.txt', 'r') as file:
+    #     file_contents = file.read()
+    #     index = file_contents.find(':', file_contents.find(itemName)) + 2
+    #     amount = int(file_contents[index:file_contents.find(';',index)]) 
+    #st.write(st.session_state)
+    return st.session_state.initialValues[itemName]
 
 def resetAllItems():
-    file_contents = ''
-    with open('initialValues.txt', 'r') as file:
-        file_contents = file.read()
-        index = 0
-        while(index < len(file_contents)):
-            index = file_contents.find(':', index) + 2
-            file_contents = file_contents[0:index] + '0' + file_contents[file_contents.find(';', index):len(file_contents)]
-            index = file_contents.find(';', index) + 1
-    with open('initialValues.txt', 'w') as file:
-        file.write(file_contents)
+    # file_contents = ''
+    # with open('initialValues.txt', 'r') as file:
+    #     file_contents = file.read()
+    #     index = 0
+    #     while(index < len(file_contents)):
+    #         index = file_contents.find(':', index) + 2
+    #         file_contents = file_contents[0:index] + '0' + file_contents[file_contents.find(';', index):len(file_contents)]
+    #         index = file_contents.find(';', index) + 1
+    # with open('initialValues.txt', 'w') as file:
+    #     file.write(file_contents)
+    for key in st.session_state.initialValues:
+        if st.session_state.initialValues[key] != 0:
+            st.session_state.initialValues[key] = 0
+        
+    
        
 def incrementItemAmount(itemName):
     itemAmount = getItemAmount(itemName) + 1
@@ -69,20 +111,23 @@ def decrementItemAmount(itemName):
         changeItemValueInFile(itemAmount, itemName)
     
 def changeItemValueInFile(itemAmount, itemName):
-    newFileValue = ""
-    with open('initialValues.txt', 'r') as file:
-        file_contents = file.read()
-        index = file_contents.find(':', file_contents.find(itemName)) + 2
-        #Still need to add the value
-        newFileValue = file_contents[0:index] + str(itemAmount) + file_contents[file_contents.find(';', index):len(file_contents)]
-    with open('initialValues.txt', 'w') as file:
-        file.write(newFileValue)
+    # newFileValue = ""
+    # with open('initialValues.txt', 'r') as file:
+    #     file_contents = file.read()
+    #     index = file_contents.find(':', file_contents.find(itemName)) + 2
+    #     #Still need to add the value
+    #     newFileValue = file_contents[0:index] + str(itemAmount) + file_contents[file_contents.find(';', index):len(file_contents)]
+    # with open('initialValues.txt', 'w') as file:
+    #     file.write(newFileValue)
+    st.session_state.initialValues[itemName] = itemAmount
+        
       
 def currentItemSelected():
-    file_contents = ""
-    with open('currentItemSelected.txt', 'r') as file:
-        file_contents = file.read()
-    return file_contents
+    # file_contents = ""
+    # with open('currentItemSelected.txt', 'r') as file:
+    #     file_contents = file.read()
+    # return file_contents
+    return st.session_state.currentItem
 
 def DDCordsToDMSCords(latLong):
     latLong = [float(latLong[0]), float(latLong[1])]
@@ -107,9 +152,15 @@ def DDCordsToDMSCords(latLong):
         dmsLatLong[i] = str(d) + '°' + str(m) + "'" + str(s) + '"' + cardinal
     return dmsLatLong
 
-@st.cache_data 
-def createMap(lat, long):
-    return folium.Map(location=[float(lat), float(long)], zoom_start=100)
+def displayCords():
+    while(1):
+        cords = getGPSValue()
+        dmsCords = DDCordsToDMSCords([cords[0], cords[1]])
+        st.markdown('#### Coordinate Location')
+        st.markdown("""<div style="background-color: #1AA91A; color: white; border-radius: 5px; padding: 10px;">"""
+                    f"""<strong>Latitude:</strong> {dmsCords[0]}<br><strong>Longitude:</strong> {dmsCords[1]}<br><strong>Height:</strong> {cords[2]} Meters above Sea Level"""
+                    """</div>""", unsafe_allow_html=True)
+        time.sleep(5)
         
 #######################
 # Page configuration
@@ -131,11 +182,11 @@ with st.sidebar:
 
 #######################
 # Dashboard Main Panel
-
+initialize_session_state()
+#st.write(st.session_state)
 col1 = st.columns((4,6,2), gap='small')
 blockCSS = """<div style="background-color: #333333; color: white; border-radius: 5px; padding: 10px;">"""
 with col1[0]:
-    z_number = 12
     cords = getGPSValue()
     dmsCords = DDCordsToDMSCords([cords[0], cords[1]])
     st.markdown('#### Coordinate Location')
@@ -144,8 +195,11 @@ with col1[0]:
                 """</div>""", unsafe_allow_html=True)
 with col1[2]:
     itemsList = ['Bandaids', 'Gauzes', 'Alcohol Wipes', 'Ointment', 'Gloves']
-    with open('currentItemSelected.txt', 'w') as file:
-        file.write(st.selectbox('Select Item', itemsList))
+    # with open('currentItemSelected.txt', 'w') as file:
+    #     file.write(st.selectbox('Select Item', itemsList))
+    st.session_state.currentItem = st.selectbox('Select Item', itemsList)
+    # st.markdown(word)
+    # ItemAmounts.updateCurrentItem(str(word))
     sub_col1, sub_col2 = st.columns(2)
     with sub_col1:
         if st.button("+1 Item"):
@@ -172,11 +226,13 @@ with col1[1]:
     
 col2 = st.columns((5,5), gap="medium")
 with col2[0]:
-    cords = getGPSValue()       
-    m = createMap(cords[0], cords[1])
-    folium.Marker(location=[float(cords[0]), float(cords[1])], popup="Drone 1 Location").add_to(m)
+    cords = getGPSValue() 
+    if 'map' not in st.session_state:
+        st.session_state.map = folium.Map(location=[float(cords[0]), float(cords[1])], zoom_start=17)
+    if 'marker' not in st.session_state:
+        st.session_state.marker = folium.Marker(location=[float(cords[0]), float(cords[1])], popup="Drone 1 Location").add_to(st.session_state.map)
     st.markdown('#### Location Of Drone')
-    folium_static(m, width=500, height=400)
+    folium_static(st.session_state.map, width=500, height=400)
 with col2[1]:
     st.markdown('#### Live Drone Feed')
     video_url = "https://www.youtube.com/watch?v=6BIURPirIQ8&ab_channel=GoingDownGaming"  # Replace with your YouTube video URL
