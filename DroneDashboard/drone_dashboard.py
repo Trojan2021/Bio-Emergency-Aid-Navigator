@@ -11,9 +11,32 @@ ADAFRUIT_IO_KEY = ''
 FEED_NAME = 'gps'
 aio = Client(ADAFRUIT_IO_USERNAME, ADAFRUIT_IO_KEY)
 
+def nemaToDD(cord, direction):
+    ddmm = int(cord)
+    dd = int(ddmm / 100)
+    mPart = cord - dd * 100
+    ddCord = dd + mPart/60 
+    if(direction == 'S' or direction == 'W'):
+        ddCord *= -1
+    return ddCord
+
 def getGPSValue():
     data = aio.receive(FEED_NAME)
-    return (data.value) if data else None
+    #cords = data.value.split(',')
+    #cords.append('100.4')
+    #return cords if data else [0, 0]
+    if(data is not None):
+        cords = data.value[data.value.find("$GPGGA"):]
+        nemaData = cords.split(',')
+        lat = nemaToDD(float(nemaData[2]), nemaData[3])
+        long = nemaToDD(float(nemaData[4]), nemaData[5])
+        height = float(nemaData[9])
+    else:
+        lat = 0
+        long = 0
+        height = 0
+        
+    return (lat,long,height)
 
 def getItemAmount(itemName):
     amount = -1
@@ -84,8 +107,9 @@ def DDCordsToDMSCords(latLong):
         dmsLatLong[i] = str(d) + '°' + str(m) + "'" + str(s) + '"' + cardinal
     return dmsLatLong
 
+@st.cache_data 
 def createMap(lat, long):
-    return
+    return folium.Map(location=[float(lat), float(long)], zoom_start=100)
         
 #######################
 # Page configuration
@@ -113,14 +137,10 @@ blockCSS = """<div style="background-color: #333333; color: white; border-radius
 with col1[0]:
     z_number = 12
     cords = getGPSValue()
-    if(cords is not None):
-        cords = cords.split(',')
-    else:
-        cords = [0, 0]
-    dmsCords = DDCordsToDMSCords(cords)
+    dmsCords = DDCordsToDMSCords([cords[0], cords[1]])
     st.markdown('#### Coordinate Location')
     st.markdown("""<div style="background-color: #1AA91A; color: white; border-radius: 5px; padding: 10px;">"""
-                f"""<strong>Latitude:</strong> {dmsCords[0]}<br><strong>Longitude:</strong> {dmsCords[1]}<br><strong>Height:</strong> {z_number} Meters above Sea Level"""
+                f"""<strong>Latitude:</strong> {dmsCords[0]}<br><strong>Longitude:</strong> {dmsCords[1]}<br><strong>Height:</strong> {cords[2]} Meters above Sea Level"""
                 """</div>""", unsafe_allow_html=True)
 with col1[2]:
     itemsList = ['Bandaids', 'Gauzes', 'Alcohol Wipes', 'Ointment', 'Gloves']
@@ -152,13 +172,8 @@ with col1[1]:
     
 col2 = st.columns((5,5), gap="medium")
 with col2[0]:
-    cords = getGPSValue()
-    if(cords is not None):
-        cords = cords.split(',')
-    else:
-        cords = [0, 0]
-        
-    m = folium.Map(location=[float(cords[0]), float(cords[1])], zoom_start=100)
+    cords = getGPSValue()       
+    m = createMap(cords[0], cords[1])
     folium.Marker(location=[float(cords[0]), float(cords[1])], popup="Drone 1 Location").add_to(m)
     st.markdown('#### Location Of Drone')
     folium_static(m, width=500, height=400)
