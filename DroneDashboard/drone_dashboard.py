@@ -14,15 +14,13 @@ aio = Client(ADAFRUIT_IO_USERNAME, ADAFRUIT_IO_KEY)
 def getGPSValue():
     data = aio.receive(FEED_NAME)
     return (data.value) if data else None
-    return '0,0'
 
 def getItemAmount(itemName):
     amount = -1
     with open('initialValues.txt', 'r') as file:
         file_contents = file.read()
         index = file_contents.find(':', file_contents.find(itemName)) + 2
-        amount = int(file_contents[index:file_contents.find(';',index)])
-    #return """Gauzes:</strong>"" 
+        amount = int(file_contents[index:file_contents.find(';',index)]) 
     return amount
 
 def resetAllItems():
@@ -36,7 +34,7 @@ def resetAllItems():
             index = file_contents.find(';', index) + 1
     with open('initialValues.txt', 'w') as file:
         file.write(file_contents)
-        
+       
 def incrementItemAmount(itemName):
     itemAmount = getItemAmount(itemName) + 1
     changeItemValueInFile(itemAmount, itemName)
@@ -56,7 +54,7 @@ def changeItemValueInFile(itemAmount, itemName):
         newFileValue = file_contents[0:index] + str(itemAmount) + file_contents[file_contents.find(';', index):len(file_contents)]
     with open('initialValues.txt', 'w') as file:
         file.write(newFileValue)
-        
+      
 def currentItemSelected():
     file_contents = ""
     with open('currentItemSelected.txt', 'r') as file:
@@ -85,6 +83,9 @@ def DDCordsToDMSCords(latLong):
         s = round((temp - m) * 60, 6)
         dmsLatLong[i] = str(d) + '°' + str(m) + "'" + str(s) + '"' + cardinal
     return dmsLatLong
+
+def createMap(lat, long):
+    return
         
 #######################
 # Page configuration

@@ -1,5 +1,5 @@
-Bandaids: 1;
+Bandaids: 8;
 Gauzes: 0;
-Alcohol Wipes: 1;
+Alcohol Wipes: 2;
 Ointment: 0;
 Gloves: 0;
