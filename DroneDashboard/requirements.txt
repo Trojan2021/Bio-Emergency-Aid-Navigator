@@ -2,3 +2,6 @@ streamlit
 pandas
 altair
 plotly
+folium
+Adafruit_IO
+streamlit_folium
