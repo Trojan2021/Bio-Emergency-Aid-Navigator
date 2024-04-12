@@ -4,33 +4,17 @@ import streamlit as st
 import altair as alt
 import threading
 import time
+import random
 import folium
 from streamlit_folium import folium_static
 from Adafruit_IO import Client
-
-class item_amounts:
-    intialValues = {
-    "Bandaids": 0,
-    "Gauzes": 0,
-    "Alcohol Wipes": 0,
-    "Ointment": 0,
-    "Gloves": 0
-    }
-    currentItem = 'Bandaids'
-    
-    def __init__(self) -> None:
-        pass
-    
-    def updateValue(self, itemName, amount):
-        item_amounts.intialValues[itemName] = amount
-        
-    def updateCurrentItem(self, itemName):
-        item_amounts.currentItem = itemName
+from streamlit.runtime.scriptrunner import add_script_run_ctx
 
 ADAFRUIT_IO_USERNAME = 'g_nerone'
 ADAFRUIT_IO_KEY = 'API_KEY_HERE'
 FEED_NAME = 'gps'
 aio = Client(ADAFRUIT_IO_USERNAME, ADAFRUIT_IO_KEY)
+stopThread = False
 # intialValues = {
 #     "Bandaids": 0,
 #     "Gauzes": 0,
@@ -44,6 +28,8 @@ def initialize_session_state():
         st.session_state.initialValues = {"Bandaids": 0,"Gauzes": 0,"Alcohol Wipes": 0,"Ointment": 0,"Gloves": 0}
     if 'currentItem' not in st.session_state:
         st.session_state.currentItem = "Bandaids"
+    if 'currentCord' not in st.session_state:
+        st.session_state.currentCord = '$GPGGA,015025.00,0,N,0,W,1,05,2.24,0,M,-33.7,M,,*62'
 
 def nemaToDD(cord, direction):
     ddmm = int(cord)
@@ -55,9 +41,19 @@ def nemaToDD(cord, direction):
     return ddCord
 
 def getGPSValue():
+    gpsOneLine = ''
+    randNum = 0
     data = aio.receive(FEED_NAME)
     gpsOneLine = data.value
-    #gpsOneLine = '$GPGGA,015025.00,4000.27294,N,08300.46216,W,1,05,2.24,249.9,M,-33.7,M,,*62'
+    if gpsOneLine.find('$GPGGA') != -1:
+        st.session_state.currentCord = gpsOneLine
+    randNum = random.randint(1,3)
+    if(randNum == 1):
+        gpsOneLine = '$GPGGA,015025.00,4000.27294,N,08300.46216,W,1,05,2.24,249.9,M,-33.7,M,,*62'
+    elif(randNum == 2):
+        gpsOneLine = '$GPGGA,015025.00,4000.27292,N,08300.46216,W,1,05,2.24,10.9,M,-33.7,M,,*62'
+    else:
+        gpsOneLine = '$GPGGA,015025.00,4000.26080,N,08300.46216,W,1,05,2.24,230.9,M,-33.7,M,,*62'
     #cords = data.value.split(',')
     #cords.append('100.4')
     #return cords if data else [0, 0]
@@ -152,15 +148,33 @@ def DDCordsToDMSCords(latLong):
         dmsLatLong[i] = str(d) + '°' + str(m) + "'" + str(s) + '"' + cardinal
     return dmsLatLong
 
-def displayCords():
-    while(1):
+def displayCords(placeholder1, placeholder2):
+    cnt = 0
+    stop_event = True
+    while(stop_event):
+        #time.sleep(5)
         cords = getGPSValue()
         dmsCords = DDCordsToDMSCords([cords[0], cords[1]])
-        st.markdown('#### Coordinate Location')
-        st.markdown("""<div style="background-color: #1AA91A; color: white; border-radius: 5px; padding: 10px;">"""
+        cnt = cnt + 1
+        st.write(f"Test{cnt}")
+        placeholder1.markdown('#### Coordinate Location')
+        placeholder2.markdown("""<div style="background-color: #1AA91A; color: white; border-radius: 5px; padding: 10px;">"""
                     f"""<strong>Latitude:</strong> {dmsCords[0]}<br><strong>Longitude:</strong> {dmsCords[1]}<br><strong>Height:</strong> {cords[2]} Meters above Sea Level"""
                     """</div>""", unsafe_allow_html=True)
-        time.sleep(5)
+        st.write(stop_event)
+        time.sleep(3)
+        st.write(stop_event)
+        if(cnt == 10):
+            stop_event = False
+        if(stopThread):
+            stop_event = False
+            st.write("SOMETHING")
+            #del st.session_state.thread1
+        st.write(stop_event)
+    #st.session_state.thread1.join()
+def resetThreading():
+    st.session_state.stopThread = False
+    del st.session_state.thread1
         
 #######################
 # Page configuration
@@ -183,7 +197,7 @@ with st.sidebar:
 #######################
 # Dashboard Main Panel
 initialize_session_state()
-#st.write(st.session_state)
+
 col1 = st.columns((4,6,2), gap='small')
 blockCSS = """<div style="background-color: #333333; color: white; border-radius: 5px; padding: 10px;">"""
 with col1[0]:
@@ -193,6 +207,13 @@ with col1[0]:
     st.markdown("""<div style="background-color: #1AA91A; color: white; border-radius: 5px; padding: 10px;">"""
                 f"""<strong>Latitude:</strong> {dmsCords[0]}<br><strong>Longitude:</strong> {dmsCords[1]}<br><strong>Height:</strong> {cords[2]} Meters above Sea Level"""
                 """</div>""", unsafe_allow_html=True)
+    # placeholder1 = st.empty()
+    # placeholder2 = st.empty()
+    # stopThread = False
+    # st.write("TESTING")
+    # thread1 = threading.Thread(target=displayCords, args=(placeholder1,placeholder2))
+    # add_script_run_ctx(thread1)
+    # thread1.start()
 with col1[2]:
     itemsList = ['Bandaids', 'Gauzes', 'Alcohol Wipes', 'Ointment', 'Gloves']
     # with open('currentItemSelected.txt', 'w') as file:
@@ -203,13 +224,16 @@ with col1[2]:
     sub_col1, sub_col2 = st.columns(2)
     with sub_col1:
         if st.button("+1 Item"):
+            # stopThread = True
             incrementItemAmount(currentItemSelected())
     with sub_col2:
         if st.button("-1 Item"):
+            # stopThread = True
             decrementItemAmount(currentItemSelected())
     sub_col = st.columns((1,5,1), gap="small")
     with sub_col[1]:
         if(st.button("Reset Items")):
+            # stopThread = True
             resetAllItems()
 with col1[1]:  
     st.markdown('#### Amount of Items')
@@ -226,14 +250,40 @@ with col1[1]:
     
 col2 = st.columns((5,5), gap="medium")
 with col2[0]:
-    cords = getGPSValue() 
-    if 'map' not in st.session_state:
-        st.session_state.map = folium.Map(location=[float(cords[0]), float(cords[1])], zoom_start=17)
-    if 'marker' not in st.session_state:
-        st.session_state.marker = folium.Marker(location=[float(cords[0]), float(cords[1])], popup="Drone 1 Location").add_to(st.session_state.map)
     st.markdown('#### Location Of Drone')
+    # if 'map' not in st.session_state:
+    st.session_state.map = folium.Map(location=[float(cords[0]), float(cords[1])], zoom_start=17)
+    st.session_state.marker = folium.Marker(location=[float(cords[0]), float(cords[1])], popup="Drone 1 Location").add_to(st.session_state.map)
+    # st.session_state.mapCounter = 0
+    # else:
+    #     st.session_state.mapCounter = st.session_state.mapCounter + 1           
+        
+    # if 'marker' not in st.session_state:
+    #     st.session_state.marker = folium.Marker(location=[float(cords[0]), float(cords[1])], popup="Drone 1 Location").add_to(st.session_state.map)
+    # else:
+    #     st.session_state.marker.remove(st.session_state.map)
+    #     st.session_state.marker = folium.Marker(location=[float(cords[0]), float(cords[1])], popup="Drone 1 Location").add_to(st.session_state.map)
+    #st.session_state.marker = folium.Marker(location=[float(cords[0]), float(cords[1])], popup="Drone 1 Location").add_to(st.session_state.map)
+    
     folium_static(st.session_state.map, width=500, height=400)
+    # if st.session_state.mapCounter >= 10:
+    #     del st.session_state.map
 with col2[1]:
     st.markdown('#### Live Drone Feed')
     video_url = "https://www.youtube.com/watch?v=6BIURPirIQ8&ab_channel=GoingDownGaming"  # Replace with your YouTube video URL
     st.video(video_url)
+# if(not stopThread): 
+#     thread1.join()
+# else:
+#     del st.session_state.stopThread
+#     del st.session_state.thread1
+# startTime = time.time()
+# endTime = startTime
+# while(endTime - startTime >= 10):
+#     endTime = time.time()
+#     st.write(time.time())
+# for key in st.session_state.keys():
+#     del st.session_state[key]
+time.sleep(5)
+st.rerun()
+    
