@@ -45,15 +45,24 @@ def getGPSValue():
     randNum = 0
     data = aio.receive(FEED_NAME)
     gpsOneLine = data.value
-    if gpsOneLine.find('$GPGGA') != -1:
-        st.session_state.currentCord = gpsOneLine
+    #st.write(gpsOneLine)
     randNum = random.randint(1,3)
     if(randNum == 1):
-        gpsOneLine = '$GPGGA,015025.00,4000.27294,N,08300.46216,W,1,05,2.24,249.9,M,-33.7,M,,*62'
+        gpsOneLine = '$GPGGA,015025.00,4000.27294,N,08300.46216,W,1,05,2.24,236.4,M,-33.7,M,,*62'
     elif(randNum == 2):
-        gpsOneLine = '$GPGGA,015025.00,4000.27292,N,08300.46216,W,1,05,2.24,10.9,M,-33.7,M,,*62'
+        gpsOneLine = '$GPGGA,015025.00,4000.27292,N,08300.46216,W,1,05,2.24,235.9,M,-33.7,M,,*62'
     else:
         gpsOneLine = '$GPGGA,015025.00,4000.26080,N,08300.46216,W,1,05,2.24,230.9,M,-33.7,M,,*62'
+    if gpsOneLine.find('$GPGGA') != -1:
+        st.session_state.currentCord = gpsOneLine
+    gpsOneLine = st.session_state.currentCord
+    # randNum = random.randint(1,3)
+    # if(randNum == 1):
+    #     gpsOneLine = '$GPGGA,015025.00,4000.27294,N,08300.46216,W,1,05,2.24,249.9,M,-33.7,M,,*62'
+    # elif(randNum == 2):
+    #     gpsOneLine = '$GPGGA,015025.00,4000.27292,N,08300.46216,W,1,05,2.24,10.9,M,-33.7,M,,*62'
+    # else:
+    #     gpsOneLine = '$GPGGA,015025.00,4000.26080,N,08300.46216,W,1,05,2.24,230.9,M,-33.7,M,,*62'
     #cords = data.value.split(',')
     #cords.append('100.4')
     #return cords if data else [0, 0]
@@ -270,7 +279,7 @@ with col2[0]:
     #     del st.session_state.map
 with col2[1]:
     st.markdown('#### Live Drone Feed')
-    video_url = "https://www.youtube.com/watch?v=6BIURPirIQ8&ab_channel=GoingDownGaming"  # Replace with your YouTube video URL
+    video_url = "https://youtu.be/m7I1rXcrQXQ"  # Replace with your YouTube video URL
     st.video(video_url)
 # if(not stopThread): 
 #     thread1.join()
